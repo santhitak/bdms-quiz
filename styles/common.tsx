@@ -57,4 +57,9 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 10,
   },
+  radioChoice: {
+    display: "flex",
+    alignItems: "flex-start",
+    paddingVertical: 4,
+  },
 });

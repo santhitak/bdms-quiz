@@ -1,19 +1,26 @@
-import { Button, SafeAreaView, TextInput } from "react-native";
-
+import { SafeAreaView, TextInput } from "react-native";
 import { HelloWave } from "@/components/HelloWave";
 import ParallaxScrollView from "@/components/ParallaxScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { styles } from "@/styles/common";
 import { Ionicons } from "@expo/vector-icons";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import RenderHtml from "react-native-render-html";
 import { GameState, ILeaderboardRank, IQuiz } from "@/types";
 import { ScrollView, TouchableHighlight } from "react-native-gesture-handler";
+import RadioGroup from "react-native-radio-buttons-group";
 
 function RandomQuiz() {
   const [data, setData] = useState<IQuiz[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedAnswers, setSelectedAnswers] = useState<{
+    [key: number]: string;
+  }>({});
+
+  const shuffleArray = (arr: string[]) => {
+    return arr.sort((a, b) => a.length - b.length);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -25,7 +32,22 @@ function RandomQuiz() {
           throw new Error("Failed to fetch data");
         }
         const json = await response.json();
-        setData(json.results);
+        const processedData = json.results.map((item: IQuiz) => {
+          const allAnswers = shuffleArray([
+            ...item.incorrect_answers,
+            item.correct_answer,
+          ]).map((answer: string) => ({
+            id: answer,
+            label: answer,
+            selected: false,
+          }));
+          return {
+            ...item,
+            allAnswers,
+          };
+        });
+        console.log(processedData);
+        setData(processedData);
       } catch (error) {
         console.log(error);
       } finally {
@@ -36,6 +58,13 @@ function RandomQuiz() {
     fetchData();
   }, []);
 
+  const handleAnswerSelect = (questionIndex: number, selectedOption: any) => {
+    setSelectedAnswers({
+      ...selectedAnswers,
+      [questionIndex]: selectedOption.value,
+    });
+  };
+
   return (
     <ScrollView>
       {isLoading ? (
@@ -43,8 +72,41 @@ function RandomQuiz() {
       ) : (
         <ThemedView>
           {data.map((item: IQuiz, i) => (
-            <ThemedView key={i}>
-              <RenderHtml source={{ html: item.question }} />
+            <ThemedView key={i} style={styles.radioChoice}>
+              <ThemedView style={styles.flexContainer}>
+                <RenderHtml
+                  source={{ html: `${i + 1})` }}
+                  baseStyle={{
+                    fontSize: 16,
+                    fontWeight: "600",
+                    alignContent: "flex-start",
+                  }}
+                />
+                <RenderHtml
+                  source={{ html: item.question }}
+                  baseStyle={{
+                    fontSize: 16,
+                    fontWeight: "600",
+                    flexShrink: 1,
+                    alignContent: "flex-start",
+                  }}
+                />
+              </ThemedView>
+              <RadioGroup
+                radioButtons={item.allAnswers.map((answer: any, index) => ({
+                  ...answer,
+                  selected: selectedAnswers[index] === answer.value,
+                }))}
+                containerStyle={{ alignItems: "flex-start" }}
+                onPress={(radioButtonsArray) => {
+                  // const selectedOption = radioButtonsArray.find(
+                  //   (option: any) => option.selected
+                  // );
+                  // if (selectedOption) {
+                  //   handleAnswerSelect(index, selectedOption);
+                  // }
+                }}
+              />
             </ThemedView>
           ))}
         </ThemedView>
