@@ -14,3 +14,4 @@
     npx expo start
    ```
 
+3. Press `w` and let it run on Webview
