@@ -1,5 +1,5 @@
 import { styles } from "@/styles/common";
-import { GameState, IErrorList, IQuiz } from "@/types";
+import { GameState, IErrorList, ILeaderboardRank, IQuiz } from "@/types";
 import React, { useState, useEffect, useMemo } from "react";
 import { ScrollView, Alert } from "react-native";
 import { RadioGroup } from "react-native-radio-buttons-group";
@@ -50,13 +50,13 @@ const RandomQuiz: React.FC<Props> = ({
 
   const processedData = useMemo(() => {
     return data.map((item: IQuiz) => {
-      const allAnswers = [...item.incorrect_answers, item.correct_answer]
-        .sort(() => Math.random() - 0.5)
-        .map((answer: string) => ({
+      const allAnswers = [...item.incorrect_answers, item.correct_answer].map(
+        (answer: string) => ({
           id: answer,
           label: answer,
           selected: false,
-        }));
+        })
+      );
       return { ...item, allAnswers };
     });
   }, [data]);

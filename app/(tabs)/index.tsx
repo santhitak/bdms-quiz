@@ -11,8 +11,11 @@ import { ScrollView, TouchableHighlight } from "react-native-gesture-handler";
 import RandomQuiz from "@/components/quiz/quiz";
 import GameScore from "@/components/quiz/score";
 import { useRouter } from "expo-router";
+import { useDispatch } from "react-redux";
+import { updateUser } from "@/redux/userSlice";
 
 export default function HomeScreen() {
+  const dispatch = useDispatch();
   const [gameState, setGameState] = useState<GameState>("start");
   const [userState, setUserState] = useState<ILeaderboardRank>({
     name: "",
@@ -56,6 +59,7 @@ export default function HomeScreen() {
         setGameState("scored");
         break;
       case "scored":
+        dispatch(updateUser({ name: userState.name, score: userState.score }));
         setGameState("finish");
         break;
       default:

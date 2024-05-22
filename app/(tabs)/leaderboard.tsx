@@ -7,27 +7,16 @@ import { ThemedView } from "@/components/ThemedView";
 import { ILeaderboardRank } from "@/types";
 import { RankBar } from "@/components/leaderboard/RankBar";
 import { styles } from "@/styles/common";
+import { RootState } from "@/redux/store";
+import { useSelector } from "react-redux";
 
-const mockData: ILeaderboardRank[] = [
-  {
-    name: "Sarah",
-    score: 30,
-  },
-  {
-    name: "Edward",
-    score: 53,
-  },
-  {
-    name: "Emma",
-    score: 12,
-  },
-];
+export default function LeaderboardScreen() {
+  const userList = useSelector<RootState, ILeaderboardRank[]>(
+    (state) => state.user.allUser
+  );
+  const sortedUserList =
+    userList && [...userList].sort((a, b) => b.score - a.score);
 
-interface Props {
-  userData: ILeaderboardRank[];
-}
-
-export default function LeaderboardScreen({ userData }: Props) {
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: "#f7f5bc", dark: "#f7f5bc" }}
@@ -43,15 +32,17 @@ export default function LeaderboardScreen({ userData }: Props) {
         <ThemedText type="title">Leaderboard</ThemedText>
       </ThemedView>
       <ThemedText>Correct more quiz to move up your rank!</ThemedText>
-      {userData && (
+      {userList[0] && (
         <ThemedView>
-          {mockData.map((dataItem: ILeaderboardRank, i) => (
-            <RankBar key={i} name={dataItem.name} score={dataItem.score} />
-          ))}
+          {sortedUserList
+            .sort((a, b) => b.score - a.score)
+            .map((dataItem: ILeaderboardRank, i) => (
+              <RankBar key={i} name={dataItem.name} score={dataItem.score} />
+            ))}
         </ThemedView>
       )}
 
-      {!userData && (
+      {!userList[0] && (
         <ThemedView>
           <ThemedText>No player data, back to play a game</ThemedText>
         </ThemedView>
