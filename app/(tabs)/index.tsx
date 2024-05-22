@@ -5,115 +5,12 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { styles } from "@/styles/common";
 import { Ionicons } from "@expo/vector-icons";
-import React, { useEffect, useState } from "react";
-import RenderHtml from "react-native-render-html";
-import { GameState, ILeaderboardRank, IQuiz } from "@/types";
+import React, { useEffect, useState, useCallback } from "react";
+import { GameState, IErrorList, ILeaderboardRank } from "@/types";
 import { ScrollView, TouchableHighlight } from "react-native-gesture-handler";
-import RadioGroup from "react-native-radio-buttons-group";
-
-function RandomQuiz() {
-  const [data, setData] = useState<IQuiz[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedAnswers, setSelectedAnswers] = useState<{
-    [key: number]: string;
-  }>({});
-
-  const shuffleArray = (arr: string[]) => {
-    return arr.sort((a, b) => a.length - b.length);
-  };
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch(
-          "https://opentdb.com/api.php?amount=4&category=17&difficulty=easy&type=multiple"
-        );
-        if (!response.ok) {
-          throw new Error("Failed to fetch data");
-        }
-        const json = await response.json();
-        const processedData = json.results.map((item: IQuiz) => {
-          const allAnswers = shuffleArray([
-            ...item.incorrect_answers,
-            item.correct_answer,
-          ]).map((answer: string) => ({
-            id: answer,
-            label: answer,
-            selected: false,
-          }));
-          return {
-            ...item,
-            allAnswers,
-          };
-        });
-        console.log(processedData);
-        setData(processedData);
-      } catch (error) {
-        console.log(error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  const handleAnswerSelect = (questionIndex: number, selectedOption: any) => {
-    setSelectedAnswers({
-      ...selectedAnswers,
-      [questionIndex]: selectedOption.value,
-    });
-  };
-
-  return (
-    <ScrollView>
-      {isLoading ? (
-        <ThemedText>Loading...</ThemedText>
-      ) : (
-        <ThemedView>
-          {data.map((item: IQuiz, i) => (
-            <ThemedView key={i} style={styles.radioChoice}>
-              <ThemedView style={styles.flexContainer}>
-                <RenderHtml
-                  source={{ html: `${i + 1})` }}
-                  baseStyle={{
-                    fontSize: 16,
-                    fontWeight: "600",
-                    alignContent: "flex-start",
-                  }}
-                />
-                <RenderHtml
-                  source={{ html: item.question }}
-                  baseStyle={{
-                    fontSize: 16,
-                    fontWeight: "600",
-                    flexShrink: 1,
-                    alignContent: "flex-start",
-                  }}
-                />
-              </ThemedView>
-              <RadioGroup
-                radioButtons={item.allAnswers.map((answer: any, index) => ({
-                  ...answer,
-                  selected: selectedAnswers[index] === answer.value,
-                }))}
-                containerStyle={{ alignItems: "flex-start" }}
-                onPress={(radioButtonsArray) => {
-                  // const selectedOption = radioButtonsArray.find(
-                  //   (option: any) => option.selected
-                  // );
-                  // if (selectedOption) {
-                  //   handleAnswerSelect(index, selectedOption);
-                  // }
-                }}
-              />
-            </ThemedView>
-          ))}
-        </ThemedView>
-      )}
-    </ScrollView>
-  );
-}
+import RandomQuiz from "@/components/quiz/quiz";
+import GameScore from "@/components/quiz/score";
+import { useRouter } from "expo-router";
 
 export default function HomeScreen() {
   const [gameState, setGameState] = useState<GameState>("start");
@@ -121,39 +18,56 @@ export default function HomeScreen() {
     name: "",
     score: 0,
   });
+  const [error, setError] = useState<IErrorList>({
+    errorName: "",
+    errorSelectAllAnswer: "",
+  });
+  const router = useRouter();
 
-  const handleNameChange = (name: string) => {
-    setUserState((prevState) => ({
-      ...prevState,
-      name: name,
-    }));
-  };
+  useEffect(() => {
+    if (gameState === "finish") {
+      router.push("/leaderboard");
+      setGameState("start");
+    }
+  }, [gameState, router]);
 
-  const handleScoreChange = (score: number) => {
-    setUserState((prevState) => ({
-      ...prevState,
-      score: score,
-    }));
-  };
+  const handleNameChange = useCallback((name: string) => {
+    setUserState((prevState) => ({ ...prevState, name }));
+  }, []);
 
-  const handleNext = () => {
+  const handleScoreChange = useCallback((score: number) => {
+    setUserState((prevState) => ({ ...prevState, score }));
+  }, []);
+
+  const handleNext = useCallback(() => {
     switch (gameState) {
       case "start":
-        setGameState("play");
+        if (userState.name) {
+          setGameState("play");
+          setError((prevState) => ({ ...prevState, errorName: "" }));
+        } else {
+          setError((prevState) => ({
+            ...prevState,
+            errorName: "Please enter your name",
+          }));
+        }
         break;
       case "play":
         setGameState("scored");
         break;
-    }
-  };
-
-  const handleBack = () => {
-    switch (gameState) {
-      case "play":
-        setGameState("start");
+      case "scored":
+        setGameState("finish");
+        break;
+      default:
         break;
     }
-  };
+  }, [gameState, userState.name]);
+
+  const handleBack = useCallback(() => {
+    if (gameState === "play") {
+      setGameState("start");
+    }
+  }, [gameState]);
 
   return (
     <ParallaxScrollView
@@ -173,7 +87,7 @@ export default function HomeScreen() {
               <ThemedText type="title">Welcome to quiz app!</ThemedText>
               <HelloWave />
             </ThemedView>
-            <ThemedView>
+            <ThemedView style={styles.paddingVerticalContainer}>
               <ThemedText type="subtitle">Enter your name</ThemedText>
               <SafeAreaView>
                 <TextInput
@@ -182,23 +96,47 @@ export default function HomeScreen() {
                   value={userState.name}
                 />
               </SafeAreaView>
+              {error.errorName && (
+                <ThemedText style={styles.errorText}>
+                  {error.errorName}
+                </ThemedText>
+              )}
             </ThemedView>
           </ThemedView>
         )}
+
         {gameState === "play" && (
           <ThemedView>
             <ThemedText type="subtitle">
               Choose wisely for each question
             </ThemedText>
-            <ScrollView>
-              <RandomQuiz />
+            <ScrollView style={styles.paddingVerticalContainer}>
+              <RandomQuiz
+                setScore={handleScoreChange}
+                setGameState={setGameState}
+                setError={setError}
+                error={error}
+              />
             </ScrollView>
+          </ThemedView>
+        )}
+
+        {gameState === "scored" && (
+          <ThemedView>
+            <GameScore score={userState.score} />
+            <ThemedView style={styles.paddingVerticalContainer}>
+              <TouchableHighlight onPress={handleNext}>
+                <ThemedView style={styles.button}>
+                  <ThemedText>View Leaderboard</ThemedText>
+                </ThemedView>
+              </TouchableHighlight>
+            </ThemedView>
           </ThemedView>
         )}
       </ThemedView>
 
       <ThemedView style={styles.flexContainerJustifyBetween}>
-        {gameState !== "start" && gameState !== "scored" && (
+        {gameState === "play" && (
           <TouchableHighlight onPress={handleBack}>
             <ThemedView style={styles.flexContainer}>
               <Ionicons size={20} name="arrow-back-outline" />
@@ -207,19 +145,11 @@ export default function HomeScreen() {
           </TouchableHighlight>
         )}
 
-        {gameState !== "scored" && (
+        {gameState === "start" && (
           <TouchableHighlight onPress={handleNext}>
             <ThemedView style={styles.flexContainer}>
               <ThemedText>Next</ThemedText>
               <Ionicons size={20} name="arrow-forward-outline" />
-            </ThemedView>
-          </TouchableHighlight>
-        )}
-
-        {gameState === "finish" && (
-          <TouchableHighlight onPress={handleBack}>
-            <ThemedView style={styles.flexContainer}>
-              <ThemedText>Visit Leaderboard</ThemedText>
             </ThemedView>
           </TouchableHighlight>
         )}

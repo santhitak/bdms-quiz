@@ -20,3 +20,8 @@ export interface IQuiz {
   incorrect_answers: string[];
   allAnswers: IAnswer[];
 }
+
+export interface IErrorList {
+  errorName: string;
+  errorSelectAllAnswer: string;
+}
