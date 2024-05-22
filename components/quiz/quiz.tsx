@@ -1,7 +1,7 @@
 import { styles } from "@/styles/common";
-import { GameState, IErrorList, ILeaderboardRank, IQuiz } from "@/types";
+import { GameState, IErrorList, IQuiz } from "@/types";
 import React, { useState, useEffect, useMemo } from "react";
-import { ScrollView, Alert } from "react-native";
+import { ScrollView } from "react-native";
 import { RadioGroup } from "react-native-radio-buttons-group";
 import { ThemedText } from "../ThemedText";
 import { ThemedView } from "../ThemedView";

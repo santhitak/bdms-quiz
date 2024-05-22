@@ -6,7 +6,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { styles } from "@/styles/common";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState, useCallback } from "react";
-import { GameState, IErrorList, ILeaderboardRank } from "@/types";
+import { GameState, IErrorList, IUserState } from "@/types";
 import { ScrollView, TouchableHighlight } from "react-native-gesture-handler";
 import RandomQuiz from "@/components/quiz/quiz";
 import GameScore from "@/components/quiz/score";
@@ -17,7 +17,7 @@ import { updateUser } from "@/redux/userSlice";
 export default function HomeScreen() {
   const dispatch = useDispatch();
   const [gameState, setGameState] = useState<GameState>("start");
-  const [userState, setUserState] = useState<ILeaderboardRank>({
+  const [userState, setUserState] = useState<IUserState>({
     name: "",
     score: 0,
   });

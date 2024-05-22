@@ -1,6 +1,6 @@
 import { RadioButtonProps } from "react-native-radio-buttons-group";
 
-export interface ILeaderboardRank {
+export interface IUserState {
   name: string;
   score: int;
 }

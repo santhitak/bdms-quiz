@@ -1,17 +1,16 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { StyleSheet, Image, Platform, View } from "react-native";
 
 import ParallaxScrollView from "@/components/ParallaxScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { ILeaderboardRank } from "@/types";
+import { IUserState } from "@/types";
 import { RankBar } from "@/components/leaderboard/RankBar";
 import { styles } from "@/styles/common";
 import { RootState } from "@/redux/store";
 import { useSelector } from "react-redux";
 
 export default function LeaderboardScreen() {
-  const userList = useSelector<RootState, ILeaderboardRank[]>(
+  const userList = useSelector<RootState, IUserState[]>(
     (state) => state.user.allUser
   );
   const sortedUserList =
@@ -36,7 +35,7 @@ export default function LeaderboardScreen() {
         <ThemedView>
           {sortedUserList
             .sort((a, b) => b.score - a.score)
-            .map((dataItem: ILeaderboardRank, i) => (
+            .map((dataItem: IUserState, i) => (
               <RankBar key={i} name={dataItem.name} score={dataItem.score} />
             ))}
         </ThemedView>

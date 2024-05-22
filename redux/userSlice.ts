@@ -1,13 +1,13 @@
 // userSlice.ts
 
-import { ILeaderboardRank } from "@/types";
+import { IUserState } from "@/types";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-interface ILeaderboardRankStore {
-  allUser: ILeaderboardRank[];
+interface IUserStateStore {
+  allUser: IUserState[];
 }
 
-const initialState: ILeaderboardRankStore = {
+const initialState: IUserStateStore = {
   allUser: [],
 };
 
@@ -15,7 +15,7 @@ const userSlice = createSlice({
   name: "user",
   initialState,
   reducers: {
-    updateUser(state, action: PayloadAction<ILeaderboardRank>) {
+    updateUser(state, action: PayloadAction<IUserState>) {
       state.allUser = [
         ...state.allUser,
         { name: action.payload.name, score: action.payload.score },
